@@ -1,0 +1,1027 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Projeto XYZ — Cronograma Geral (Hoje móvel)</title>
+  <meta name="description" content="Cronograma com marco 'Hoje' móvel, busca, edição de datas e período do projeto visível." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --panel: rgba(255,255,255,.06);
+      --panel2: rgba(255,255,255,.08);
+      --stroke: rgba(255,255,255,.12);
+      --stroke2: rgba(255,255,255,.18);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.65);
+      --muted2: rgba(255,255,255,.5);
+
+      --weekend: rgba(255,255,255,.06);
+      --today: rgba(255, 214, 102, .16);
+
+      --shadow: 0 24px 60px rgba(0,0,0,.55);
+      --shadow2: 0 10px 24px rgba(0,0,0,.38);
+
+      --r12: 12px;
+      --r16: 16px;
+      --r22: 22px;
+
+      --leftCol: 520px;
+      --cellW: 28px;
+      --rowH: 34px;
+      --headerH: 74px;
+
+      --c-demol: #68c6ff;
+      --c-paredes: #7ee59a;
+      --c-hid: #a9adb7;
+      --c-esq: #9aa3b2;
+      --c-ele: #ffe27a;
+      --c-seg: #ffe27a;
+      --c-piso: #f0a0d7;
+      --c-cob: #60d2ff;
+      --c-met: #ffb08b;
+      --c-fach: #ffb400;
+
+      --gridLine: rgba(255,255,255,.06);
+      --gridBold: rgba(255,255,255,.11);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      color: var(--text);
+      background:
+        radial-gradient(1200px 600px at 20% 12%, rgba(104,198,255,.15), transparent 60%),
+        radial-gradient(900px 540px at 85% 18%, rgba(255,180,0,.12), transparent 60%),
+        radial-gradient(1000px 700px at 60% 90%, rgba(126,229,154,.10), transparent 60%),
+        linear-gradient(180deg, #070a0e 0%, #0b0f14 40%, #070a0e 100%);
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif;
+      overflow-x: hidden;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(10px);
+      background: linear-gradient(180deg, rgba(11,15,20,.92), rgba(11,15,20,.55));
+      border-bottom: 1px solid var(--stroke);
+    }
+    .wrap {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 18px 18px 14px;
+    }
+    .top {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+    .brand {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      min-width: 260px;
+    }
+    .mark {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      background:
+        conic-gradient(from 210deg, rgba(104,198,255,.9), rgba(255,180,0,.9), rgba(126,229,154,.9), rgba(104,198,255,.9));
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      position: relative;
+      overflow: hidden;
+    }
+    .mark:after {
+      content: "";
+      position: absolute; inset: 1px;
+      border-radius: 13px;
+      background: linear-gradient(180deg, rgba(10,12,16,.92), rgba(10,12,16,.65));
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+    }
+    .brand h1 {
+      font-family: "Space Grotesk", Inter, sans-serif;
+      font-size: clamp(20px, 2.5vw, 26px);
+      letter-spacing: -0.02em;
+      margin: -2px 0 0;
+      line-height: 1.05;
+    }
+    .brand p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+      max-width: 58ch;
+    }
+    #projectPeriod {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 6px;
+      font-weight: 500;
+    }
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      align-items: center;
+      margin-top: 2px;
+    }
+    .chip, .btn {
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 10px 12px;
+      font-size: 13px;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: var(--shadow2);
+      cursor: pointer;
+      user-select: none;
+      transition: transform .15s ease, background .15s ease, border-color .15s ease;
+    }
+    .chip {
+      padding: 9px 10px;
+      background: rgba(255,255,255,.04);
+      box-shadow: none;
+    }
+    .chip small { color: var(--muted2); font-weight: 500; }
+    .chip strong { font-weight: 650; letter-spacing: -0.01em; }
+    .btn:hover { transform: translateY(-1px); background: rgba(255,255,255,.085); border-color: var(--stroke2); }
+    .btn:active { transform: translateY(0px) scale(.99); }
+    .btn svg { width: 16px; height: 16px; opacity: .9; }
+    .tog {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 12px;
+      cursor: pointer;
+    }
+    .switch {
+      width: 40px; height: 22px;
+      background: rgba(255,255,255,.10);
+      border: 1px solid var(--stroke);
+      border-radius: 999px;
+      position: relative;
+      flex: 0 0 auto;
+    }
+    .switch i {
+      position: absolute; top: 50%; left: 3px;
+      width: 16px; height: 16px;
+      transform: translateY(-50%);
+      border-radius: 999px;
+      background: rgba(255,255,255,.82);
+      box-shadow: 0 8px 16px rgba(0,0,0,.35);
+      transition: left .18s ease, background .18s ease;
+    }
+    .tog[data-on="true"] .switch { background: rgba(126,229,154,.18); border-color: rgba(126,229,154,.35); }
+    .tog[data-on="true"] .switch i { left: 21px; background: rgba(126,229,154,.95); }
+    main {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 18px 18px 34px;
+    }
+    .gantt {
+      margin-top: 10px;
+      border-radius: var(--r22);
+      overflow: hidden;
+      border: 1px solid var(--stroke);
+      box-shadow: var(--shadow);
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.028));
+      position: relative;
+    }
+    .ganttGrid {
+      display: grid;
+      grid-template-columns: var(--leftCol) 1fr;
+      min-height: 560px;
+    }
+    .tasks {
+      border-right: 1px solid var(--stroke);
+      background: linear-gradient(180deg, rgba(10,12,16,.55), rgba(10,12,16,.35));
+      overflow: auto;
+      max-height: 70vh;
+    }
+    .tasksTop {
+      position: sticky;
+      top: 78px;
+      z-index: 12;
+      padding: 12px 14px;
+      background: linear-gradient(180deg, rgba(10,12,16,.95), rgba(10,12,16,.72));
+      border-bottom: 1px solid var(--stroke);
+    }
+    .search {
+      display: flex; align-items: center; gap: 10px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      padding: 10px 12px;
+      border-radius: 14px;
+      width: 100%;
+    }
+    .search svg { width: 16px; height: 16px; opacity: .85; }
+    .search input {
+      width: 100%;
+      background: transparent;
+      border: 0;
+      outline: none;
+      color: rgba(255,255,255,.9);
+      font-size: 13px;
+    }
+    .tasksHint {
+      margin-top: 10px;
+      color: var(--muted2);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+    .taskRows {
+      padding-bottom: 10px;
+    }
+    .row {
+      height: var(--rowH);
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      gap: 10px;
+      border-bottom: 1px solid rgba(255,255,255,.05);
+    }
+    .row .dot {
+      width: 8px; height: 8px; border-radius: 999px;
+      background: rgba(255,255,255,.25);
+      flex: 0 0 auto;
+      box-shadow: 0 0 0 3px rgba(255,255,255,.04);
+    }
+    .row .name {
+      font-size: 13px;
+      color: rgba(255,255,255,.86);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
+      flex: 1 1 auto;
+    }
+    .row.phase {
+      background: linear-gradient(90deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      height: calc(var(--rowH) + 6px);
+    }
+    .row.phase .name {
+      font-family: "Space Grotesk", Inter, sans-serif;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      font-size: 12px;
+      color: rgba(255,255,255,.92);
+    }
+    .row.phase .dot { background: rgba(255,255,255,.5); }
+    .edit {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 0 0 auto;
+    }
+    .field {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 8px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+    }
+    .field label {
+      font-size: 10px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.55);
+      user-select: none;
+    }
+    .field input {
+      width: 52px;
+      padding: 6px 6px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(10,12,16,.35);
+      color: rgba(255,255,255,.9);
+      font-size: 12px;
+      outline: none;
+    }
+    .field input:focus {
+      border-color: rgba(104,198,255,.35);
+      box-shadow: 0 0 0 4px rgba(104,198,255,.12);
+    }
+    .dur {
+      width: 56px;
+    }
+    .timeline {
+      position: relative;
+      overflow: auto;
+      overscroll-behavior: contain;
+      max-height: 70vh;
+    }
+    .timelineInner { min-width: calc(var(--cellW) * 38); }
+    .timelineHeader {
+      position: sticky;
+      top: 78px;
+      z-index: 9;
+      height: var(--headerH);
+      background: linear-gradient(180deg, rgba(10,12,16,.95), rgba(10,12,16,.65));
+      border-bottom: 1px solid var(--stroke);
+      display: grid;
+      grid-template-rows: 34px 40px;
+    }
+    .months {
+      display: flex;
+      align-items: center;
+      padding: 8px 12px 0;
+      gap: 10px;
+      color: rgba(255,255,255,.86);
+      font-size: 12px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .months .pill {
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+    .months .pill i {
+      width: 9px; height: 9px; border-radius: 999px;
+      background: rgba(255,255,255,.6);
+      box-shadow: 0 0 0 3px rgba(255,255,255,.05);
+    }
+    .days {
+      display: grid;
+      grid-template-columns: repeat(38, var(--cellW));
+      align-items: stretch;
+      border-top: 1px solid rgba(255,255,255,.05);
+      padding: 0 12px 10px;
+    }
+    .day {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      border-right: 1px solid rgba(255,255,255,.05);
+      position: relative;
+      color: rgba(255,255,255,.78);
+      font-size: 11px;
+      line-height: 1.05;
+      padding-top: 6px;
+    }
+    .day b {
+      font-family: "Space Grotesk", Inter, sans-serif;
+      font-size: 12px;
+      letter-spacing: .02em;
+      color: rgba(255,255,255,.9);
+    }
+    .day small {
+      font-size: 10px;
+      color: rgba(255,255,255,.55);
+      margin-top: 3px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .day.weekend { background: var(--weekend); }
+    .day.today {
+      background: var(--today);
+      box-shadow: inset 0 0 0 1px rgba(255,214,102,.22);
+      border-radius: 10px;
+      margin: 0 2px;
+      border-right-color: transparent;
+    }
+    .gridArea {
+      position: relative;
+      padding: 0 12px 12px;
+    }
+    .gridLines {
+      position: absolute; inset: 0 12px 0 12px;
+      pointer-events: none;
+      display: grid;
+      grid-template-columns: repeat(38, var(--cellW));
+      height: 100%;
+    }
+    .gridLines span { border-right: 1px solid var(--gridLine); }
+    .gridLines span.weekend { background: rgba(255,255,255,.025); }
+    .gridLines span.wk { border-right: 1px solid var(--gridBold); }
+    .bars { position: relative; z-index: 2; }
+    .barRow {
+      height: var(--rowH);
+      border-bottom: 1px solid rgba(255,255,255,.05);
+      position: relative;
+    }
+    .barRow.phase {
+      height: calc(var(--rowH) + 6px);
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      background: linear-gradient(90deg, rgba(255,255,255,.02), rgba(255,255,255,.0));
+    }
+    .bar {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 16px;
+      border-radius: 999px;
+      box-shadow: 0 10px 18px rgba(0,0,0,.35);
+      border: 1px solid rgba(255,255,255,.18);
+      overflow: hidden;
+      cursor: grab;
+      background: linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,.62));
+    }
+    .bar:active { cursor: grabbing; }
+    .bar::before {
+      content: "";
+      position: absolute; inset: 0;
+      background: linear-gradient(90deg, rgba(255,255,255,.0), rgba(255,255,255,.35), rgba(255,255,255,.0));
+      transform: translateX(-60%);
+      opacity: .35;
+    }
+    .bar:hover::before { animation: sheen 1.1s ease both; }
+    @keyframes sheen { to { transform: translateX(60%); } }
+    .bar[data-color="demol"] { background: linear-gradient(180deg, color-mix(in srgb, var(--c-demol) 95%, white 5%), color-mix(in srgb, var(--c-demol) 70%, black 10%)); }
+    .bar[data-color="paredes"] { background: linear-gradient(180deg, color-mix(in srgb, var(--c-paredes) 95%, white 5%), color-mix(in srgb, var(--c-paredes) 70%, black 10%)); }
+    .bar[data-color="hid"] { background: linear-gradient(180deg, color-mix(in srgb, var(--c-hid) 95%, white 5%), color-mix(in srgb, var(--c-hid) 70%, black 10%)); }
+    .bar[data-color="esq"] { background: linear-gradient(180deg, color-mix(in srgb, var(--c-esq) 95%, white 5%), color-mix(in srgb, var(--c-esq) 70%, black 10%)); }
+    .bar[data-color="ele"] { background: linear-gradient(180deg, color-mix(in srgb, var(--c-ele) 95%, white 5%), color-mix(in srgb, var(--c-ele) 70%, black 10%)); }
+    .bar[data-color="seg"] { background: linear-gradient(180deg, color-mix(in srgb, var(--c-seg) 95%, white 5%), color-mix(in srgb, var(--c-seg) 70%, black 10%)); }
+    .bar[data-color="piso"] { background: linear-gradient(180deg, color-mix(in srgb, var(--c-piso) 95%, white 5%), color-mix(in srgb, var(--c-piso) 70%, black 10%)); }
+    .bar[data-color="cob"] { background: linear-gradient(180deg, color-mix(in srgb, var(--c-cob) 95%, white 5%), color-mix(in srgb, var(--c-cob) 70%, black 10%)); }
+    .bar[data-color="met"] { background: linear-gradient(180deg, color-mix(in srgb, var(--c-met) 95%, white 5%), color-mix(in srgb, var(--c-met) 70%, black 10%)); }
+    .bar[data-color="fach"] { background: linear-gradient(180deg, color-mix(in srgb, var(--c-fach) 95%, white 5%), color-mix(in srgb, var(--c-fach) 70%, black 10%)); }
+    .bar .label {
+      position: absolute;
+      inset: 0 10px 0 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 11px;
+      color: rgba(12,14,18,.92);
+      font-weight: 650;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+      mix-blend-mode: multiply;
+    }
+    .todayLine {
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 2px;
+      background: linear-gradient(180deg, rgba(255,214,102,0), rgba(255,214,102,.72), rgba(255,214,102,0));
+      box-shadow: 0 0 0 1px rgba(255,214,102,.12);
+      z-index: 4;
+      pointer-events: none;
+      opacity: 0;
+    }
+    .todayTag {
+      position: absolute;
+      top: 10px;
+      transform: translateX(-50%);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      color: rgba(12,14,18,.92);
+      background: rgba(255,214,102,.92);
+      border: 1px solid rgba(255,214,102,.35);
+      box-shadow: 0 12px 26px rgba(0,0,0,.35);
+      pointer-events: none;
+      opacity: 0;
+      z-index: 5;
+    }
+    .tip {
+      position: fixed;
+      z-index: 80;
+      pointer-events: none;
+      transform: translate(-50%, calc(-100% - 12px));
+      min-width: 240px;
+      max-width: 340px;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(12,14,18,.82);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 24px 70px rgba(0,0,0,.55);
+      opacity: 0;
+      transition: opacity .12s ease;
+    }
+    .tip .t {
+      font-family: "Space Grotesk", Inter, sans-serif;
+      margin: 0;
+      font-size: 13px;
+      letter-spacing: -0.01em;
+      color: rgba(255,255,255,.92);
+    }
+    .tip .d {
+      margin: 6px 0 0;
+      font-size: 12px;
+      color: rgba(255,255,255,.68);
+      line-height: 1.35;
+    }
+    .tip .k {
+      margin: 10px 0 0;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .pill2 {
+      padding: 6px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.05);
+      font-size: 11px;
+      color: rgba(255,255,255,.82);
+    }
+    .reveal { opacity: 0; transform: translateY(10px); }
+    .reveal.on { animation: rise .6s cubic-bezier(.2,.8,.2,1) both; }
+    @keyframes rise { to { opacity: 1; transform: translateY(0); } }
+    @media (max-width: 980px) {
+      :root { --leftCol: 460px; --cellW: 26px; }
+      .brand p { display: none; }
+    }
+    @media (max-width: 740px) {
+      :root { --leftCol: 400px; --cellW: 24px; --headerH: 78px; }
+      .edit { gap: 6px; }
+      .field input { width: 46px; }
+      .dur { width: 52px; }
+    }
+    @media (max-width: 560px) {
+      :root { --leftCol: 340px; --cellW: 22px; }
+      .field label { display: none; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand reveal" style="animation-delay:.05s">
+        <div class="mark" aria-hidden="true"></div>
+        <div>
+          <h1>Projeto XYZ — Cronograma Geral</h1>
+          <p>Busca não sobrepõe as linhas. Edite <b>Início</b>, <b>Fim</b> ou <b>Duração</b> (dias) e as barras atualizam automaticamente.</p>
+          <p id="projectPeriod" style="font-size: 13px; color: var(--muted); margin-top: 6px;">Período do projeto: —</p>
+        </div>
+      </div>
+
+      <div class="controls reveal" style="animation-delay:.12s">
+        <div class="chip" title="Período do cronograma (exemplo)">
+          <small>Janela</small> <strong><span id="spanDays">38</span> dias</strong>
+        </div>
+
+        <div class="btn" id="btnToday" title="Centralizar na linha de hoje" role="button" tabindex="0">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M8 2v3M16 2v3M4.5 7.5h15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M6.5 5.5h11A3 3 0 0 1 20.5 8.5v11A3 3 0 0 1 17.5 22.5h-11A3 3 0 0 1 3.5 19.5v-11A3 3 0 0 1 6.5 5.5Z" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M8 12h8M12 8v8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+          Hoje
+        </div>
+
+        <div class="btn" id="btnZoom" title="Alternar zoom (largura das colunas)" role="button" tabindex="0">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M10.5 19.5a8 8 0 1 1 0-16 8 8 0 0 1 0 16Z" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M16.5 16.5 21 21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M8.5 10.5h4M10.5 8.5v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+          Zoom
+        </div>
+
+        <div class="chip tog" id="togWeekends" data-on="true" title="Realçar fins de semana" role="button" tabindex="0">
+          <div class="switch" aria-hidden="true"><i></i></div>
+          <strong>Fds</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="gantt reveal" style="animation-delay:.18s" aria-label="Cronograma em formato Gantt">
+    <div class="ganttGrid">
+      <aside class="tasks" id="tasksPane" aria-label="Lista de atividades">
+        <div class="tasksTop">
+          <div class="search" role="search">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M10.5 19.5a8 8 0 1 1 0-16 8 8 0 0 1 0 16Z" stroke="currentColor" stroke-width="1.8"/>
+              <path d="M16.5 16.5 21 21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+            <input id="q" type="search" placeholder="Buscar atividade… (ex: reboco, elétrica, fachada)" aria-label="Buscar atividade" />
+          </div>
+          <div class="tasksHint">
+            Edite <b>Início</b>, <b>Fim</b> ou <b>Duração</b>. Ao ajustar um, os outros se recalculam.
+          </div>
+        </div>
+
+        <div class="taskRows" id="taskRows"></div>
+      </aside>
+
+      <div class="timeline" id="timeline" aria-label="Linha do tempo">
+        <div class="timelineInner" id="timelineInner">
+          <div class="timelineHeader">
+            <div class="months">
+              <span class="pill"><i></i> Fevereiro</span>
+              <span class="pill"><i></i> Março</span>
+            </div>
+            <div class="days" id="days"></div>
+          </div>
+
+          <div class="gridArea">
+            <div class="todayLine" id="todayLine"></div>
+            <div class="todayTag" id="todayTag">HOJE</div>
+            <div class="gridLines" id="gridLines" aria-hidden="true"></div>
+            <div class="bars" id="bars"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="tip" id="tip" role="dialog" aria-hidden="true"></div>
+
+<script>
+  const dow = ["D","S","T","Q","Q","S","S"];
+  function genDays(total=38){
+    const out = [];
+    const start = new Date(Date.UTC(2026,1,2)); // 02/02/2026 (exemplo)
+    for(let i=0;i<total;i++){
+      const d = new Date(start.getTime() + i*86400000);
+      out.push({
+        idx: i+1,
+        day: d.getUTCDate(),
+        month: d.getUTCMonth(),
+        dd: dow[d.getUTCDay()],
+        isWeekend: d.getUTCDay()===0 || d.getUTCDay()===6,
+        dateObj: d
+      });
+    }
+    return out;
+  }
+  const DAYS = genDays(38);
+  document.getElementById("spanDays").textContent = DAYS.length;
+
+  const MODEL = [
+    { type:"phase", id:"p1", title:"1 — Demolições / escavações", color:"demol" },
+    { type:"task", id:"t1", phase:"p1", title:"Escavações (caixas/fund)", color:"demol", start:2, end:6 },
+    { type:"task", id:"t2", phase:"p1", title:"Aberturas e paredes", color:"demol", start:3, end:5 },
+    { type:"task", id:"t3", phase:"p1", title:"Coberturas", color:"demol", start:7, end:8 },
+    { type:"task", id:"t4", phase:"p1", title:"Remoção entulho", color:"demol", start:10, end:12 },
+    { type:"task", id:"t5", phase:"p1", title:"Caixa d'água", color:"demol", start:4, end:7 },
+    { type:"phase", id:"p2", title:"2 — Paredes", color:"paredes" },
+    { type:"task", id:"t6", phase:"p2", title:"Alvenarias", color:"paredes", start:3, end:5 },
+    { type:"task", id:"t7", phase:"p2", title:"Guarita (coluna+piso+degraus)", color:"paredes", start:3, end:9 },
+    { type:"task", id:"t8", phase:"p2", title:"Reboco", color:"paredes", start:4, end:10 },
+    { type:"task", id:"t9", phase:"p2", title:"Emboço", color:"paredes", start:6, end:11 },
+    { type:"phase", id:"p3", title:"3 — Instalações Hidráulicas", color:"hid" },
+    { type:"task", id:"t10", phase:"p3", title:"Ramal distribuição — caixa d'água", color:"hid", start:4, end:12 },
+    { type:"task", id:"t11", phase:"p3", title:"Pontos água/esgoto — copa/banheiro", color:"hid", start:5, end:13 },
+    { type:"phase", id:"p31", title:"3.1 — Esquadrias internas", color:"esq" },
+    { type:"task", id:"t12", phase:"p31", title:"Janelas de alumínio", color:"esq", start:4, end:12 },
+    { type:"task", id:"t13", phase:"p31", title:"Vidros temperados", color:"esq", start:15, end:20 },
+    { type:"task", id:"t14", phase:"p31", title:"Portas internas", color:"esq", start:15, end:22 },
+    { type:"phase", id:"p32", title:"3.2 — Instalações (TATANKA)", color:"hid" },
+    { type:"task", id:"t15", phase:"p32", title:"Montagem", color:"hid", start:13, end:16 },
+    { type:"phase", id:"p4", title:"4 — Instalações Elétricas", color:"ele" },
+    { type:"task", id:"t16", phase:"p4", title:"Ramais distribuição — entrada", color:"ele", start:3, end:12 },
+    { type:"task", id:"t17", phase:"p4", title:"Ramais piso", color:"ele", start:4, end:12 },
+    { type:"task", id:"t18", phase:"p4", title:"Ramais aéreos", color:"ele", start:12, end:22 },
+    { type:"task", id:"t19", phase:"p4", title:"Quadro de distribuição", color:"ele", start:12, end:26 },
+    { type:"phase", id:"p5", title:"5 — Instalações Segurança", color:"seg" },
+    { type:"task", id:"t20", phase:"p5", title:"Ramais distribuição — entrada", color:"seg", start:7, end:26 },
+    { type:"task", id:"t21", phase:"p5", title:"Ramais piso", color:"seg", start:7, end:26 },
+    { type:"task", id:"t22", phase:"p5", title:"Ramais aéreos", color:"seg", start:7, end:30 },
+    { type:"phase", id:"p6", title:"6 — Piso / Revestimentos", color:"piso" },
+    { type:"task", id:"t23", phase:"p6", title:"Contrapiso", color:"piso", start:8, end:16 },
+    { type:"task", id:"t24", phase:"p6", title:"Escritórios", color:"piso", start:9, end:12 },
+    { type:"task", id:"t25", phase:"p6", title:"Banheiros", color:"piso", start:9, end:16 },
+    { type:"task", id:"t26", phase:"p6", title:"Loja", color:"piso", start:14, end:18 },
+    { type:"task", id:"t27", phase:"p6", title:"Externo", color:"piso", start:19, end:28 },
+    { type:"phase", id:"p7", title:"7 — Coberturas / telhamentos", color:"cob" },
+    { type:"task", id:"t28", phase:"p7", title:"Estrutura metálica cob.", color:"cob", start:2, end:5 },
+    { type:"task", id:"t29", phase:"p7", title:"Cobertura telha novas", color:"cob", start:6, end:12 },
+    { type:"task", id:"t30", phase:"p7", title:"Cobertura sobre expedição", color:"cob", start:12, end:16 },
+    { type:"phase", id:"p8", title:"8 — Estruturas metálicas", color:"met" },
+    { type:"task", id:"t31", phase:"p8", title:"Fechamentos internos", color:"met", start:14, end:30 },
+    { type:"task", id:"t32", phase:"p8", title:"Portões e grades", color:"met", start:16, end:31 },
+    { type:"task", id:"t33", phase:"p8", title:"Cobertura sobre expedição", color:"met", start:10, end:27 },
+    { type:"task", id:"t34", phase:"p8", title:"Guarita", color:"met", start:12, end:20 },
+    { type:"task", id:"t35", phase:"p8", title:"Cobertura lateral", color:"met", start:1, end:9 },
+    { type:"phase", id:"p9", title:"9 — Estruturas Fachadas", color:"fach" },
+    { type:"task", id:"t36", phase:"p9", title:"Fachada frontal", color:"fach", start:14, end:32 },
+    { type:"task", id:"t37", phase:"p9", title:"Fachada lateral", color:"fach", start:14, end:30 },
+    { type:"task", id:"t38", phase:"p9", title:"Comunicação visual", color:"fach", start:30, end:34 },
+    { type:"task", id:"t39", phase:"p9", title:"Guarita e detalhes", color:"fach", start:12, end:14 },
+  ];
+
+  const elDays = document.getElementById("days");
+  const elGridLines = document.getElementById("gridLines");
+  const elTaskRows = document.getElementById("taskRows");
+  const elBars = document.getElementById("bars");
+  const timeline = document.getElementById("timeline");
+  const tasksPane = document.getElementById("tasksPane");
+  const tip = document.getElementById("tip");
+  const q = document.getElementById("q");
+
+  const state = { zoom: 0, weekendsOn: true, query: "" };
+
+  function renderHeader(){
+    elDays.innerHTML = "";
+    elGridLines.innerHTML = "";
+    DAYS.forEach((d, i) => {
+      const day = document.createElement("div");
+      day.className = "day";
+      if(d.isWeekend) day.classList.add("weekend");
+      if(d.idx === getTodayIndex()) day.classList.add("today");
+      day.innerHTML = `<b>${d.day}</b><small>${d.dd}</small>`;
+      elDays.appendChild(day);
+
+      const line = document.createElement("span");
+      if(d.isWeekend) line.classList.add("weekend");
+      if((i+1) % 7 === 0) line.classList.add("wk");
+      elGridLines.appendChild(line);
+    });
+  }
+
+  function cellW(){ return parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--cellW")); }
+  function barLeft(start){ return (start-1) * cellW(); }
+  function barWidth(start,end){ return Math.max(1, (end - start + 1)) * cellW(); }
+  function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+  function normalizeTask(task){
+    task.start = clamp(Math.round(task.start), 1, DAYS.length);
+    task.end = clamp(Math.round(task.end), 1, DAYS.length);
+    if(task.end < task.start) task.end = task.start;
+  }
+  function phaseLabel(phaseId){
+    const p = MODEL.find(x => x.type==="phase" && x.id === phaseId);
+    return p ? p.title : "—";
+  }
+  function filteredModel(){
+    const query = state.query.trim().toLowerCase();
+    const filtered = [];
+    let currentPhase = null;
+    let buffer = [];
+    function flush(){
+      if(!currentPhase) return;
+      if(query === ""){
+        filtered.push(currentPhase, ...buffer);
+      } else {
+        const matched = buffer.filter(x => x.title.toLowerCase().includes(query));
+        if(matched.length) filtered.push(currentPhase, ...matched);
+      }
+      currentPhase = null;
+      buffer = [];
+    }
+    for(const item of MODEL){
+      if(item.type === "phase"){ flush(); currentPhase = item; }
+      else buffer.push(item);
+    }
+    flush();
+    return filtered;
+  }
+  function renderAll(){
+    const list = filteredModel();
+    elTaskRows.innerHTML = "";
+    elBars.innerHTML = "";
+    list.forEach((item, rowIndex) => {
+      const row = document.createElement("div");
+      row.className = "row " + (item.type==="phase" ? "phase" : "");
+      row.dataset.type = item.type;
+      row.dataset.id = item.id || "";
+      row.dataset.title = item.title;
+      const dot = document.createElement("span");
+      dot.className = "dot";
+      const c = getComputedStyle(document.documentElement).getPropertyValue(`--c-${item.color}`) || "rgba(255,255,255,.55)";
+      dot.style.background = (c||"").trim();
+      const name = document.createElement("div");
+      name.className = "name";
+      name.textContent = item.title;
+      row.append(dot, name);
+      if(item.type === "task"){
+        normalizeTask(item);
+        const dur = (item.end - item.start + 1);
+        const edit = document.createElement("div");
+        edit.className = "edit";
+        edit.appendChild(field("Início", "start", item.start, item.id));
+        edit.appendChild(field("Fim", "end", item.end, item.id));
+        edit.appendChild(field("Dias", "dur", dur, item.id, true));
+        row.appendChild(edit);
+      }
+      elTaskRows.appendChild(row);
+      const barRow = document.createElement("div");
+      barRow.className = "barRow " + (item.type==="phase" ? "phase" : "");
+      if(item.type === "task"){
+        const b = document.createElement("div");
+        b.className = "bar";
+        b.dataset.color = item.color;
+        b.dataset.id = item.id;
+        b.style.left = `${barLeft(item.start)}px`;
+        b.style.width = `${barWidth(item.start, item.end)}px`;
+        b.tabIndex = 0;
+        b.setAttribute("role","button");
+        b.setAttribute("aria-label", `${item.title}. Início D${item.start}. Fim D${item.end}.`);
+        const label = document.createElement("div");
+        label.className = "label";
+        label.innerHTML = `<span>${item.title}</span><em>${item.end-item.start+1}d</em>`;
+        b.appendChild(label);
+        const show = () => {
+          const rect = b.getBoundingClientRect();
+          tip.style.left = `${rect.left + rect.width/2}px`;
+          tip.style.top = `${rect.top}px`;
+          tip.innerHTML = `
+            <p class="t">${item.title}</p>
+            <p class="d">Janela: <b>D${item.start}</b> → <b>D${item.end}</b> (${item.end-item.start+1} dias)</p>
+            <div class="k">
+              <span class="pill2">Etapa: ${phaseLabel(item.phase)}</span>
+              <span class="pill2">ID: ${item.id}</span>
+            </div>
+          `;
+          tip.style.opacity = "1";
+          tip.setAttribute("aria-hidden","false");
+        };
+        const hide = () => {
+          tip.style.opacity = "0";
+          tip.setAttribute("aria-hidden","true");
+        };
+        b.addEventListener("mouseenter", show);
+        b.addEventListener("mouseleave", hide);
+        b.addEventListener("focus", show);
+        b.addEventListener("blur", hide);
+        barRow.appendChild(b);
+      }
+      elBars.appendChild(barRow);
+    });
+    updateProjectPeriod();
+    placeTodayLine();
+  }
+  function field(label, kind, value, taskId, isDur=false){
+    const wrap = document.createElement("div");
+    wrap.className = "field";
+    const lab = document.createElement("label");
+    lab.textContent = label;
+    const input = document.createElement("input");
+    input.type = "number";
+    input.inputMode = "numeric";
+    input.min = "1";
+    input.max = String(DAYS.length);
+    input.value = value;
+    input.className = isDur ? "dur" : "";
+    input.dataset.kind = kind;
+    input.dataset.taskId = taskId;
+    wrap.append(lab, input);
+    return wrap;
+  }
+  function updateBar(task){
+    const bar = elBars.querySelector(`.bar[data-id="${task.id}"]`);
+    if(!bar) return;
+    bar.style.left = `${barLeft(task.start)}px`;
+    bar.style.width = `${barWidth(task.start, task.end)}px`;
+    const em = bar.querySelector("em");
+    if(em) em.textContent = `${task.end-task.start+1}d`;
+    bar.setAttribute("aria-label", `${task.title}. Início D${task.start}. Fim D${task.end}.`);
+  }
+  function updateRowInputs(task){
+    const row = elTaskRows.querySelector(`.row[data-id="${task.id}"]`);
+    if(!row) return;
+    const start = row.querySelector(`input[data-kind="start"]`);
+    const end = row.querySelector(`input[data-kind="end"]`);
+    const dur = row.querySelector(`input[data-kind="dur"]`);
+    if(start) start.value = task.start;
+    if(end) end.value = task.end;
+    if(dur) dur.value = (task.end-task.start+1);
+  }
+  elTaskRows.addEventListener("input", (e) => {
+    const input = e.target;
+    if(!(input instanceof HTMLInputElement)) return;
+    const taskId = input.dataset.taskId;
+    const kind = input.dataset.kind;
+    if(!taskId || !kind) return;
+    const task = MODEL.find(t => t.type==="task" && t.id === taskId);
+    if(!task) return;
+    let v = parseInt(input.value, 10);
+    if(Number.isNaN(v)) v = 1;
+    if(kind === "start"){
+      task.start = clamp(v, 1, DAYS.length);
+      if(task.end < task.start) task.end = task.start;
+    } else if(kind === "end"){
+      task.end = clamp(v, 1, DAYS.length);
+      if(task.end < task.start) task.start = task.end;
+    } else if(kind === "dur"){
+      const dur = clamp(v, 1, DAYS.length);
+      task.end = clamp(task.start + dur - 1, 1, DAYS.length);
+    }
+    normalizeTask(task);
+    updateRowInputs(task);
+    updateBar(task);
+  });
+  q.addEventListener("input", (e) => {
+    state.query = e.target.value || "";
+    renderAll();
+  });
+  timeline.addEventListener("scroll", () => { tasksPane.scrollTop = timeline.scrollTop; });
+  tasksPane.addEventListener("scroll", () => { timeline.scrollTop = tasksPane.scrollTop; });
+  const togWeekends = document.getElementById("togWeekends");
+  togWeekends.addEventListener("click", () => {
+    state.weekendsOn = !state.weekendsOn;
+    togWeekends.dataset.on = String(state.weekendsOn);
+    document.documentElement.style.setProperty("--weekend", state.weekendsOn ? "rgba(255,255,255,.06)" : "rgba(255,255,255,0)");
+    renderHeader();
+  });
+  document.getElementById("btnZoom").addEventListener("click", () => {
+    state.zoom = (state.zoom + 1) % 3;
+    const root = document.documentElement;
+    if(state.zoom === 0){
+      root.style.setProperty("--cellW", "28px");
+      root.style.setProperty("--rowH", "34px");
+      root.style.setProperty("--leftCol", "520px");
+    } else if(state.zoom === 1){
+      root.style.setProperty("--cellW", "34px");
+      root.style.setProperty("--rowH", "36px");
+      root.style.setProperty("--leftCol", "560px");
+    } else {
+      root.style.setProperty("--cellW", "22px");
+      root.style.setProperty("--rowH", "32px");
+      root.style.setProperty("--leftCol", "480px");
+    }
+    renderHeader();
+    renderAll();
+    placeTodayLine();
+  });
+  function getTodayIndex(){
+    const now = new Date();
+    const utcNow = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    for(let d of DAYS){
+      if(d.dateObj.getTime() === utcNow.getTime()){
+        return d.idx;
+      }
+    }
+    return null;
+  }
+  function placeTodayLine(){
+    const todayIdx = getTodayIndex();
+    const todayLine = document.getElementById("todayLine");
+    const todayTag = document.getElementById("todayTag");
+    if(todayIdx === null){
+      todayLine.style.opacity = "0";
+      todayTag.style.opacity = "0";
+      return;
+    }
+    const x = 12 + (todayIdx-1)*cellW() + cellW()/2;
+    todayLine.style.left = `${x}px`;
+    todayLine.style.opacity = "1";
+    todayTag.style.left = `${x}px`;
+    todayTag.style.opacity = "1";
+  }
+  document.getElementById("btnToday").addEventListener("click", () => {
+    const todayIdx = getTodayIndex();
+    if(todayIdx === null) return;
+    const targetX = (todayIdx-1)*cellW();
+    timeline.scrollTo({ left: Math.max(0, targetX - 200), top: timeline.scrollTop, behavior: "smooth" });
+  });
+  function formatDate(d){
+    const day = String(d.day).padStart(2, '0');
+    const month = String(d.month + 1).padStart(2, '0');
+    const year = 2026;
+    return `${day}/${month}/${year}`;
+  }
+  function updateProjectPeriod(){
+    const tasks = MODEL.filter(t => t.type === "task");
+    if(tasks.length === 0) return;
+    const minStart = Math.min(...tasks.map(t => t.start));
+    const maxEnd = Math.max(...tasks.map(t => t.end));
+    const startDate = DAYS.find(d => d.idx === minStart);
+    const endDate = DAYS.find(d => d.idx === maxEnd);
+    const periodText = `Período do projeto: ${formatDate(startDate)} — ${formatDate(endDate)}`;
+    const elPeriod = document.getElementById("projectPeriod");
+    if(elPeriod) elPeriod.textContent = periodText;
+  }
+  Array.from(document.querySelectorAll(".reveal")).forEach((el, i) => {
+    setTimeout(() => el.classList.add("on"), 80 + i*70);
+  });
+  renderHeader();
+  renderAll();
+  placeTodayLine();
+  window.addEventListener("resize", () => {
+    renderHeader();
+    renderAll();
+    placeTodayLine();
+  });
+  window.addEventListener("keydown", (e) => {
+    if(e.key === "Escape"){
+      tip.style.opacity = "0";
+      tip.setAttribute("aria-hidden","true");
+      q.blur();
+    }
+  });
+</script>
+</body>
+</html>
